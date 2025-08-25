@@ -1,5 +1,4 @@
 #include "io_helper.hpp"
-#include "schema.hpp"
 #include <iostream>
 
 void getConfig(MysqlConfig &myConfig, PgsqlConfig &pgConfig) {
@@ -36,7 +35,7 @@ void getConfig(MysqlConfig &myConfig, PgsqlConfig &pgConfig) {
     std::cin >> pgConfig.pgport;
 }
 
-std::string getPgConnInfo(PgsqlConfig &pgConfig) {
+std::string getPgConnInfo(const PgsqlConfig &pgConfig) {
     return "host=" + pgConfig.pghost + " port=" + std::to_string(pgConfig.pgport) +
            " dbname=" + pgConfig.pgname + " user=" + pgConfig.pguser +
            " password=" + pgConfig.pgpass;
