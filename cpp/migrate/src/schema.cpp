@@ -1,4 +1,4 @@
-#include "etl_types.hpp"
+#include "schema.hpp"
 
 std::string myQuerySQL() {
     std::string cols = "id, name, created_at";

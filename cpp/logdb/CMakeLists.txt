@@ -10,7 +10,7 @@ project(Migrate LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(migrate src/migrate.cpp src/io_helper.cpp src/schema.cpp)
+add_executable(migrate src/etl.cpp src/etl_helper.cpp src/etl_types.cpp)
 
 target_include_directories(migrate PRIVATE include)
 

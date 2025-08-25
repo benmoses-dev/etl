@@ -1,6 +1,6 @@
 #pragma once
 
-#include "etl_types.hpp"
+#include "schema.hpp"
 
 void getConfig(MysqlConfig &myConfig, PgsqlConfig &pgConfig);
 

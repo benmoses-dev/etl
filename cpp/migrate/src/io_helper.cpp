@@ -1,5 +1,5 @@
-#include "etl_helper.hpp"
-#include "etl_types.hpp"
+#include "io_helper.hpp"
+#include "schema.hpp"
 #include <iostream>
 
 void getConfig(MysqlConfig &myConfig, PgsqlConfig &pgConfig) {
