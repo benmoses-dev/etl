@@ -1,25 +1,9 @@
 #pragma once
 
+#include <functional>
+#include <libpq-fe.h>
+#include <mysql/mysql.h>
 #include <string>
-
-#define pgtable "table"
-#define mytable "table"
-
-struct MysqlRow {
-    int id;
-    std::string name;
-    std::string created_at;
-};
-
-std::string myQuerySQL();
-
-struct PgsqlRow {
-    int id;
-    std::string name;
-    std::string created_at;
-};
-
-std::string pgInsertSQL(const PgsqlRow &row);
 
 struct MysqlConfig {
     std::string myname;
@@ -37,4 +21,24 @@ struct PgsqlConfig {
     int pgport;
 };
 
-PgsqlRow mapRow(const MysqlRow &row);
+enum class PgType { INT32, INT64, TEXT, TIMESTAMPTZ, MACADDR };
+
+struct ColumnMapping {
+    std::string name;
+    PgType type;
+    std::function<std::vector<char>(const std::string &)> converter;
+};
+
+std::vector<ColumnMapping> getMapping();
+
+std::vector<std::string> mapMysqlRow(MYSQL_ROW &row);
+
+std::string myQuerySQL();
+
+void startCopy(PGconn *pg);
+
+MYSQL_RES *getMysqlResult(const MysqlConfig &myConfig, MYSQL *mysql);
+
+PGconn *getPgConn(const PgsqlConfig &pgConfig);
+
+void endCopy(PGconn *pg);
