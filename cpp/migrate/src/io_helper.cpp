@@ -37,13 +37,3 @@ void getConfig(MysqlConfig &myConfig, PgsqlConfig &pgConfig) {
     std::cout << "MySQL connection: " << myConfig.myuser << "@" << myConfig.myhost << ":"
               << myConfig.myport << "/" << myConfig.myname << std::endl;
 }
-
-std::string getPgConnInfo(const PgsqlConfig &pgConfig) {
-    std::string conninfo = "host=" + pgConfig.pghost +
-                           " port=" + std::to_string(pgConfig.pgport) +
-                           " dbname=" + pgConfig.pgname + " user=" + pgConfig.pguser +
-                           " password=" + pgConfig.pgpass;
-
-    std::cout << "PostgreSQL connection info: " << conninfo << std::endl;
-    return conninfo;
-}

@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <libpq-fe.h>
+#include <memory>
 #include <mysql/mysql.h>
 #include <string>
 
@@ -29,16 +30,44 @@ struct ColumnMapping {
     std::function<std::vector<char>(const std::string &)> converter;
 };
 
-std::vector<ColumnMapping> getMapping();
+struct MysqlDeleter {
+    void operator()(MYSQL *mysql) const noexcept;
+};
 
-std::vector<std::string> mapMysqlRow(MYSQL_ROW &row);
+struct MysqlResDeleter {
+    void operator()(MYSQL_RES *res) const noexcept;
+};
 
-std::string myQuerySQL();
+struct PgDeleter {
+    void operator()(PGconn *pg) const noexcept;
+};
 
-void startCopy(PGconn *pg);
+using MysqlPtr = std::unique_ptr<MYSQL, MysqlDeleter>;
+using MysqlResPtr = std::unique_ptr<MYSQL_RES, MysqlResDeleter>;
+using PgPtr = std::unique_ptr<PGconn, PgDeleter>;
 
-MYSQL_RES *getMysqlResult(const MysqlConfig &myConfig, MYSQL *mysql);
+class DBHelper {
+  public:
+    DBHelper(const std::string &fromTable, const std::string &toTable,
+             const std::vector<ColumnMapping> &mapping);
 
-PGconn *getPgConn(const PgsqlConfig &pgConfig);
+    void startCopy();
+    MYSQL_ROW getMysqlRow();
+    void writeRow(const MYSQL_ROW &row);
+    void endCopy();
 
-void endCopy(PGconn *pg);
+  private:
+    MysqlPtr mysql;
+    MysqlResPtr res;
+    PgPtr pg;
+
+    const std::vector<ColumnMapping> &mapping;
+    const std::string fromTable;
+    const std::string toTable;
+
+    MysqlConfig myConfig;
+    PgsqlConfig pgConfig;
+
+    void initPGConnection();
+    void initMysqlConnection();
+};
