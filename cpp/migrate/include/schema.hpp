@@ -3,7 +3,7 @@
 #include <functional>
 #include <libpq-fe.h>
 #include <memory>
-#include <mysql/mysql.h>
+#include <mariadb/mysql.h>
 #include <string>
 
 struct MysqlConfig {
