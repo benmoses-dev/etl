@@ -18,10 +18,9 @@ void PgDeleter::operator()(PGconn *pg) const noexcept {
         PQfinish(pg);
 }
 
-DBHelper::DBHelper(const std::string &fromTable, const std::string &toTable,
-                   const std::vector<ColumnMapping> &mapping)
-    : mysql(nullptr), pg(nullptr), res(nullptr), fromTable(fromTable), toTable(toTable),
-      mapping(mapping) {
+DBHelper::DBHelper(const TableConf *conf)
+    : fromTable(conf->tabName), toTable(conf->tabName), mapping(conf->map),
+      mysql(nullptr), pg(nullptr), res(nullptr) {
     getConfig(myConfig, pgConfig);
     initMysqlConnection();
     initPGConnection();
@@ -88,7 +87,7 @@ void DBHelper::startCopy() {
     }
     PQclear(pres);
     auto header = makeBinaryHeader();
-    if (PQputCopyData(pg.get(), header.data(), header.size()) <= 0) {
+    if (PQputCopyData(pg.get(), header.data(), static_cast<int>(header.size())) <= 0) {
         std::string error =
             std::string("COPY header write failed: ") + PQerrorMessage(pg.get());
         throw std::runtime_error(error);
@@ -105,7 +104,7 @@ void DBHelper::writeRow(const MYSQL_ROW &row) {
         result.push_back(row[i] ? row[i] : "");
     }
     auto data = makeBinaryRow(result, mapping);
-    if (PQputCopyData(pg.get(), data.data(), data.size()) <= 0) {
+    if (PQputCopyData(pg.get(), data.data(), static_cast<int>(data.size())) <= 0) {
         std::string error =
             std::string("COPY binary row write failed: ") + PQerrorMessage(pg.get());
         throw std::runtime_error(error);
@@ -114,7 +113,7 @@ void DBHelper::writeRow(const MYSQL_ROW &row) {
 
 void DBHelper::endCopy() {
     auto trailer = makeBinaryTrailer();
-    if (PQputCopyData(pg.get(), trailer.data(), trailer.size()) <= 0) {
+    if (PQputCopyData(pg.get(), trailer.data(), static_cast<int>(trailer.size())) <= 0) {
         std::string error =
             std::string("PQputCopyData trailer failed: ") + PQerrorMessage(pg.get());
         throw std::runtime_error(error);

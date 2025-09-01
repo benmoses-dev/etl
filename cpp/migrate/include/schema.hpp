@@ -2,8 +2,8 @@
 
 #include <functional>
 #include <libpq-fe.h>
-#include <memory>
 #include <mariadb/mysql.h>
+#include <memory>
 #include <string>
 
 struct MysqlConfig {
@@ -11,7 +11,7 @@ struct MysqlConfig {
     std::string myhost;
     std::string myuser;
     std::string mypass;
-    int myport;
+    unsigned int myport;
 };
 
 struct PgsqlConfig {
@@ -19,7 +19,7 @@ struct PgsqlConfig {
     std::string pghost;
     std::string pguser;
     std::string pgpass;
-    int pgport;
+    unsigned int pgport;
 };
 
 enum class PgType { INT32, INT64, TEXT, TIMESTAMPTZ, MACADDR };
@@ -28,6 +28,11 @@ struct ColumnMapping {
     std::string name;
     PgType type;
     std::function<std::vector<char>(const std::string &)> converter;
+};
+
+struct TableConf {
+    const std::string tabName;
+    const std::vector<ColumnMapping> map;
 };
 
 struct MysqlDeleter {
@@ -48,8 +53,7 @@ using PgPtr = std::unique_ptr<PGconn, PgDeleter>;
 
 class DBHelper {
   public:
-    DBHelper(const std::string &fromTable, const std::string &toTable,
-             const std::vector<ColumnMapping> &mapping);
+    DBHelper(const TableConf *config);
 
     void startCopy();
     MYSQL_ROW getMysqlRow();
@@ -57,13 +61,13 @@ class DBHelper {
     void endCopy();
 
   private:
-    MysqlPtr mysql;
-    MysqlResPtr res;
-    PgPtr pg;
-
-    const std::vector<ColumnMapping> &mapping;
     const std::string fromTable;
     const std::string toTable;
+    const std::vector<ColumnMapping> &mapping;
+
+    MysqlPtr mysql;
+    PgPtr pg;
+    MysqlResPtr res;
 
     MysqlConfig myConfig;
     PgsqlConfig pgConfig;

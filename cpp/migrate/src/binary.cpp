@@ -52,7 +52,7 @@ std::vector<char> macaddrConverter(const std::string &s) {
     unsigned int bytes[6];
     sscanf(s.c_str(), "%x:%x:%x:%x:%x:%x", &bytes[0], &bytes[1], &bytes[2], &bytes[3],
            &bytes[4], &bytes[5]);
-    for (int i = 0; i < 6; i++)
+    for (size_t i = 0; i < 6; i++)
         out[i] = (char)bytes[i];
     return out;
 }
@@ -60,7 +60,7 @@ std::vector<char> macaddrConverter(const std::string &s) {
 std::vector<char> makeBinaryRow(const std::vector<std::string> &mysqlRow,
                                 const std::vector<ColumnMapping> &mapping) {
     std::vector<char> out;
-    int16_t ncols = htons(mapping.size());
+    int16_t ncols = htons(static_cast<int16_t>(mapping.size()));
     out.insert(out.end(), reinterpret_cast<char *>(&ncols),
                reinterpret_cast<char *>(&ncols) + 2);
 
@@ -73,7 +73,7 @@ std::vector<char> makeBinaryRow(const std::vector<std::string> &mysqlRow,
             continue;
         }
         auto buf = mapping[i].converter(val);
-        int32_t len = htonl(buf.size());
+        int32_t len = htonl(static_cast<int32_t>(buf.size()));
         out.insert(out.end(), reinterpret_cast<char *>(&len),
                    reinterpret_cast<char *>(&len) + 4);
         out.insert(out.end(), buf.begin(), buf.end());
