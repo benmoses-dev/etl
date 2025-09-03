@@ -55,10 +55,7 @@ class DBHelper {
   public:
     DBHelper(const TableConf *config);
 
-    void startCopy();
-    MYSQL_ROW getMysqlRow();
-    void writeRow(const MYSQL_ROW &row);
-    void endCopy();
+    void migrateTable();
 
   private:
     const std::string fromTable;
@@ -72,6 +69,15 @@ class DBHelper {
     MysqlConfig myConfig;
     PgsqlConfig pgConfig;
 
+    void startCopy();
+    MYSQL_ROW getMysqlRow();
+    void writeRow(const MYSQL_ROW &row);
+    void endCopy();
     void initPGConnection();
     void initMysqlConnection();
+    void createTable();
+    void disableTriggers();
+    void dropIndexes();
+    void createIndexes();
+    void enableTriggers();
 };

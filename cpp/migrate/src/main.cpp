@@ -1,5 +1,5 @@
 #include "binary.hpp"
-#include "schema.hpp"
+#include "db_helper.hpp"
 #include <array>
 #include <atomic>
 #include <exception>
@@ -19,12 +19,7 @@ struct ThreadJoiner {
 
 void migrateTable(const TableConf *conf) {
     std::unique_ptr<DBHelper> dbHelper = std::make_unique<DBHelper>(conf);
-    dbHelper->startCopy();
-    MYSQL_ROW row;
-    while ((row = dbHelper->getMysqlRow())) {
-        dbHelper->writeRow(row);
-    }
-    dbHelper->endCopy();
+    dbHelper->migrateTable();
 }
 
 int main() {

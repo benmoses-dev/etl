@@ -35,7 +35,7 @@ if(FAST_BUILD)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG -pthread")
 endif()
 
-add_executable(migrate src/main.cpp src/io_helper.cpp src/schema.cpp src/binary.cpp)
+add_executable(migrate src/main.cpp src/io_helper.cpp src/db_helper.cpp src/binary.cpp)
 
 target_include_directories(migrate PRIVATE include)
 

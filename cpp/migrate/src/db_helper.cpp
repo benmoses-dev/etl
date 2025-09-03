@@ -1,4 +1,4 @@
-#include "schema.hpp"
+#include "db_helper.hpp"
 #include "binary.hpp"
 #include "io_helper.hpp"
 #include <iostream>
@@ -79,13 +79,13 @@ void DBHelper::startCopy() {
             copyCmd += ", ";
     }
     copyCmd += ") FROM STDIN BINARY";
-    PGresult *pres = PQexec(pg.get(), copyCmd.c_str());
-    if (PQresultStatus(pres) != PGRES_COMMAND_OK) {
+    PGresult *r = PQexec(pg.get(), copyCmd.c_str());
+    if (PQresultStatus(r) != PGRES_COMMAND_OK) {
         std::string error = std::string("COPY start failed: ") + PQerrorMessage(pg.get());
-        PQclear(pres);
+        PQclear(r);
         throw std::runtime_error(error);
     }
-    PQclear(pres);
+    PQclear(r);
     auto header = makeBinaryHeader();
     if (PQputCopyData(pg.get(), header.data(), static_cast<int>(header.size())) <= 0) {
         std::string error =
@@ -124,13 +124,72 @@ void DBHelper::endCopy() {
         throw std::runtime_error(error);
     }
 
-    while (PGresult *pres = PQgetResult(pg.get())) {
-        if (PQresultStatus(pres) != PGRES_COMMAND_OK) {
+    while (PGresult *r = PQgetResult(pg.get())) {
+        if (PQresultStatus(r) != PGRES_COMMAND_OK) {
             std::string error =
                 "COPY finish failed: " + std::string(PQerrorMessage(pg.get()));
-            PQclear(pres);
+            PQclear(r);
             throw std::runtime_error(error);
         }
-        PQclear(pres);
+        PQclear(r);
     }
+}
+
+void DBHelper::createTable() {
+    // Todo: query mysql and get CREATE TABLE statement
+    const std::string schema;
+    PGresult *r = PQexec(pg.get(), schema.c_str());
+    if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+        std::string error =
+            "CREATE TABLE failed: " + std::string(PQerrorMessage(pg.get()));
+        PQclear(r);
+        throw std::runtime_error(error);
+    }
+    PQclear(r);
+}
+
+void DBHelper::disableTriggers() {
+    std::string sql = "ALTER TABLE " + toTable + " DISABLE TRIGGER ALL";
+    PGresult *r = PQexec(pg.get(), sql.c_str());
+    PQclear(r);
+}
+
+void DBHelper::dropIndexes() {
+    // Todo: query pg_indexes
+    std::string sql = "DROP INDEX IF EXISTS ...";
+}
+
+void DBHelper::createIndexes() {
+    const std::vector<std::string> idxStatements;
+    for (auto &stmt : idxStatements) {
+        PGresult *r = PQexec(pg.get(), stmt.c_str());
+        if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+            std::string error =
+                "CREATE INDEX failed: " + std::string(PQerrorMessage(pg.get()));
+            PQclear(r);
+            throw std::runtime_error(error);
+        }
+        PQclear(r);
+    }
+}
+
+void DBHelper::enableTriggers() {
+    std::string sql = "ALTER TABLE " + toTable + " ENABLE TRIGGER ALL";
+    PGresult *r = PQexec(pg.get(), sql.c_str());
+    PQclear(r);
+}
+
+void DBHelper::migrateTable() {
+    createTable();
+    disableTriggers();
+    dropIndexes();
+    startCopy();
+    MYSQL_ROW row;
+    while ((row = getMysqlRow())) {
+        writeRow(row);
+    }
+    endCopy();
+    createIndexes();
+    enableTriggers();
+    // Todo: recreate foreign key constraints
 }

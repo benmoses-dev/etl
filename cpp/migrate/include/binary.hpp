@@ -1,6 +1,6 @@
 #pragma once
 
-#include "schema.hpp"
+#include "db_helper.hpp"
 
 std::vector<char> int32Converter(const std::string &s);
 

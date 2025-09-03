@@ -1,5 +1,5 @@
 #pragma once
 
-#include "schema.hpp"
+#include "db_helper.hpp"
 
 void getConfig(MysqlConfig &myConfig, PgsqlConfig &pgConfig);
